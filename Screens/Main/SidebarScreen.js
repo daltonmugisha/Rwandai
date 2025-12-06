@@ -11,19 +11,16 @@ import {
   ScrollView,
   Dimensions
 } from "react-native";
-import {
-  Ionicons,
-  MaterialIcons,
-  MaterialCommunityIcons
-} from "@expo/vector-icons";
+import { Ionicons, MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
-const SIDEBAR_WIDTH = SCREEN_WIDTH * 0.80;  // full screen
+const SIDEBAR_WIDTH = SCREEN_WIDTH * 0.80;
 
-export default function Sidebar({ sidebarX, closeSidebar }) {
+export default function Sidebar({ sidebarX, closeSidebar, user, recentChats = [] }) {
   const navigation = useNavigation();
 
+  // Default menu items
   const menuItems = [
     { id: "1", label: "New chat", icon: "chatbubbles-outline", lib: "ION" },
     { id: "2", label: "Rwanda", lib: "FLAG" },
@@ -31,16 +28,21 @@ export default function Sidebar({ sidebarX, closeSidebar }) {
     { id: "4", label: "New project", icon: "folder-outline", lib: "MCI" }
   ];
 
-  const recentChats = [
-    "Clarifying vague statement",
-    "Handoff management techniques",
-    "Conclusion enhancement",
-    "Congestion control definition imp…",
-    "Idea execution challenge",
-    "Perfected table explanation",
-    "Hair transplant cost breakdown",
-    "Online side hustles for teens"
-  ];
+  // Extract display name and initials from email
+  const getDisplayName = (email) => {
+    if (!email) return "User";
+    let name = email.split("@")[0]; // before @
+    name = name.replace(".com", "").replace(".gmail", ""); // remove common endings
+    return name;
+  };
+
+   const getInitials = (email) => {
+    if (!email) return "US";
+    const name = email.split("@")[0]; // take the part before @
+    const parts = name.split(/[\._]/);
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return parts.map(p => p.charAt(0).toUpperCase()).join("").substring(0, 2);
+  };
 
   const renderIcon = (item) => {
     switch(item.lib) {
@@ -96,23 +98,30 @@ export default function Sidebar({ sidebarX, closeSidebar }) {
 
           <Text style={styles.sectionTitle}>Recent Chats</Text>
           <View style={styles.recentContainer}>
-            {recentChats.map((title, index) => (
-              <TouchableOpacity key={index} onPress={closeSidebar} style={styles.recentItem}>
-                <Text style={styles.recentText}>{title}</Text>
-              </TouchableOpacity>
-            ))}
+            {recentChats.length > 0 ? (
+              recentChats.map((title, index) => (
+                <TouchableOpacity key={index} onPress={closeSidebar} style={styles.recentItem}>
+                  <Text style={styles.recentText}>{title}</Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={[styles.recentText, { fontStyle: "italic", opacity: 0.6 }]}>
+                No chats yet
+              </Text>
+            )}
           </View>
         </ScrollView>
 
+        {/* Bottom User Info */}
         <TouchableOpacity
           style={styles.bottomUser}
           activeOpacity={0.7}
           onPress={() => navigation.navigate("SettingsScreen")}
         >
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>MD</Text>
+            <Text style={styles.avatarText}>{getInitials(user?.email)}</Text>
           </View>
-          <Text style={styles.username}>Mugisha Dalton</Text>
+          <Text style={styles.username}>{getDisplayName(user?.email)}</Text>
           <Ionicons name="chevron-down" size={22} color="#999" />
         </TouchableOpacity>
       </SafeAreaView>
